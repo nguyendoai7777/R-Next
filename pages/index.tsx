@@ -1,8 +1,17 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { MainLayout } from '@layout';
+import { useEffect } from 'react';
+import { debounce } from '@common/helper';
 
 export default function Home() {
+  useEffect(() => {
+    window.addEventListener(
+      'resize',
+      debounce(() => {
+        console.log('chua debounce');
+      })
+    );
+  }, []);
   return (
     <>
       <Head>
@@ -12,11 +21,10 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-
         <MainLayout>
           <div>hello</div>
         </MainLayout>
       </main>
     </>
-  )
+  );
 }
