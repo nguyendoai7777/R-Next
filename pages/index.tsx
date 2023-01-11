@@ -1,16 +1,75 @@
 import Head from 'next/head';
 import { MainLayout } from '@layout';
-import { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { debounce } from '@common/helper';
+import { DynamicButton } from 'dnd-button';
 
+import { DuiButton } from '@dui/button';
+
+const numSteps = 20.0;
+
+let boxElement: HTMLElement;
+let prevRatio = 0.0;
+const increasingColor = (ratio: number) => `rgba(40, 40, 190, ${ratio})`;
+const decreasingColor = (ratio: number) => `rgba(40, 40, 190, ${ratio})`;
 export default function Home() {
+  const ref = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  const handleIntersect = (
+    entries: IntersectionObserverEntry[],
+    observer: IntersectionObserver
+  ) => {
+    entries.forEach((entry) => {
+      console.log(entry.intersectionRatio);
+      const target = entry.target as HTMLElement;
+      if (entry.intersectionRatio > prevRatio) {
+        target.style.backgroundColor = increasingColor(entry.intersectionRatio);
+        target.style.transform = `translateX(${(entry.intersectionRatio + .8) * 100}%)`;
+      } else {
+        target.style.backgroundColor = decreasingColor(entry.intersectionRatio);
+        target.style.transform = `translateX(${(entry.intersectionRatio + .8) * 100}%)`;
+      }
+
+      prevRatio = entry.intersectionRatio;
+    });
+  };
+
+  const buildThresholdList = () => {
+    let thresholds = [];
+    let numSteps = 20;
+
+    for (let i = 1.0; i <= numSteps; i++) {
+      let ratio = i / numSteps;
+      thresholds.push(ratio);
+    }
+
+    thresholds.push(0);
+    console.log(thresholds);
+    return thresholds;
+  };
+  const createObserver = () => {
+    const options: IntersectionObserverInit = {
+      root: null, //mainRef.current,
+      rootMargin: '0px',
+      threshold:  buildThresholdList(),
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, options);
+    observer.observe(boxElement);
+  };
+
   useEffect(() => {
-    window.addEventListener(
+    /*window.addEventListener(
       'resize',
       debounce(() => {
         console.log('chua debounce');
       })
-    );
+    );*/
+
+    boxElement = document.querySelector('#box')!;
+    createObserver();
+
   }, []);
   return (
     <>
@@ -20,10 +79,35 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
+      <main style={{ width: '100%' }} ref={mainRef}>
         <MainLayout>
-          <div>hello</div>
+          <DuiButton color="deeppink">hehe</DuiButton>
+          <DynamicButton
+            onClick={() => console.log('click')}
+            icon={{
+              position: 'end',
+              element: 'icon',
+            }}
+          >
+            Button Libs
+          </DynamicButton>
+          <div
+            style={{ height: '1920px', width: '100%', background: 'purple' }}
+          >
+            hello
+          </div>
         </MainLayout>
+        <div id="box">
+          <div className="vertical">
+            Welcome to <strong>The Box!</strong>
+          </div>
+        </div>
+        <div
+          ref={ref}
+          style={{ height: '1920px', width: '100%', background: 'deeppink' }}
+        >
+          Target
+        </div>
       </main>
     </>
   );
